@@ -1,5 +1,6 @@
 import * as Yup from 'yup';
 import Recipient from '../models/Recipients';
+import User from '../models/Users';
 
 class RecipientController {
     async store(req, res) {
@@ -7,6 +8,7 @@ class RecipientController {
             name: Yup.string().required(),
             street: Yup.string().required(),
             number: Yup.number().required(),
+            complement: Yup.number().notRequired(),
             state: Yup.string().required(),
             city: Yup.string().required(),
             zipcode: Yup.string().required(),
@@ -14,6 +16,19 @@ class RecipientController {
 
         if (!(await schema.isValid(req.body))) {
             return res.status(400).json({ error: 'Validation fails' });
+        }
+
+        // verificando se o usuário é admin
+
+        const { provider_id } = req.body;
+
+        const checkIsProvider = await User.findOne({
+            where: { id: provider_id, provider: true },
+        });
+        if (!checkIsProvider) {
+            return res.status(400).json({
+                error: 'You can only create recipient with providers',
+            });
         }
 
         const recipientExists = await Recipient.findOne({
