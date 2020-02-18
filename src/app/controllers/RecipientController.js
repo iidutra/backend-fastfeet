@@ -1,8 +1,26 @@
 import * as Yup from 'yup';
 import Recipient from '../models/Recipients';
-import User from '../models/Users';
+import User from '../models/User';
 
 class RecipientController {
+    async index(req, res) {
+        const recipients = await Recipient.findAll();
+
+        return res.json(recipients);
+    }
+
+    async show(req, res) {
+        const { recipientId } = req.params;
+
+        const recipient = await Recipient.findByPk(recipientId);
+
+        if (!recipient) {
+            return res.status(400).json({ error: 'Recipient not found' });
+        }
+
+        return res.json(recipient);
+    }
+
     async store(req, res) {
         const schema = Yup.object().shape({
             name: Yup.string().required(),
@@ -93,6 +111,25 @@ class RecipientController {
             street,
             number,
         });
+    }
+
+    async delete(req, res) {
+        const { recipientId } = req.params;
+        if (!recipientId) {
+            return res
+                .status(400)
+                .json({ error: 'Recipient id required in URL' });
+        }
+
+        const recipient = await Recipient.findByPk(recipientId);
+
+        if (!recipient) {
+            res.status(400).json({ error: 'Recipient not found' });
+        }
+
+        await recipient.destroy();
+
+        return res.json({ msg: 'Deleted with success' });
     }
 }
 
